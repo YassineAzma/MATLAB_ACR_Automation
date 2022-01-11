@@ -7,7 +7,7 @@
 % intensity uniformity is then calculated based on the eligible ROIs with 
 % the maximum and minimum means. The results are visualised.
 
-function PIU = ACR_Uniformity(img_ACR,obj_ACR)
+% function PIU = ACR_Uniformity(img_ACR,obj_ACR)
 close all
 
 if size(img_ACR,4) > 1 % check if input array contains multiple ACR series
@@ -26,7 +26,7 @@ end
 
 r = 8; % for ~201cm^2 circular ROI
 r_img = ceil(10*r./res(1)); % equivalent pixel radius
-r_small = sqrt(100/pi)/res(1); % equivalent pixel radius for small ROI
+r_small = ceil(sqrt(100/pi)/res(1)); % equivalent pixel radius for small ROI
 d_void = 5; % distance from top of phantom to end of void in mm
 thresh = 40;
 
@@ -74,35 +74,59 @@ roi_index = (img_rows - centroid(2) - d_void/res(1)).^2 + (img_cols - centroid(1
 
 % ACR Percentage Integral Uniformity (PIU)
 roi = zeros(size(roi_index)); % pre-allocate small ROI arrays
-mean_val = zeros(size(roi_index)); % pre-allocate mean of small ROIs
+mean_array = zeros(size(roi_index)); % pre-allocate mean of small ROIs
 
 img_unif_masked = roi_index.*img_unif; % mask uniformity slice with large ROI
 
+% OLD, SLOW NESTED LOOP
+% tic
+% f = waitbar(0,'1','Name','Placing Small ROIs...',...
+%     'CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
+% for i = 1:size(img_unif,1)
+%     waitbar(i/size(img_unif,1),f,sprintf('Simulating Column %.0f of %.0f',i,size(img_unif,1)))
+%     for j = 1:size(img_unif,2)
+%         if roi_index(i,j) == 0
+%             mean_array(i,j) = 0; % don't create small ROI if centre outside large ROI
+%         else     
+%             roi = (img_rows - i).^2 + (img_cols - j).^2 <= r_small.^2; % create ~1cm^2 small circular ROI
+%             roi_vals = img_unif_masked(roi); % retrieve small ROI values
+%             if length(nonzeros(roi_vals)) < length(find(roi))
+%                 mean_array(i,j) = 0; % don't create small ROI if centre outside large ROI
+%             else
+%                 mean_array(i,j) = mean(nonzeros(roi_vals)); % take mean
+%             end
+%         end
+%     end
+% end
+% delete(f)
+% toc
+
+base_mask = (img_rows - centroid(2) - d_void/res(1)).^2 + (img_cols - centroid(1)).^2 <= r_small.^2;
+[rows,cols] = find(base_mask);
+[lrows,lcols] = find(roi_index);
+
 f = waitbar(0,'1','Name','Placing Small ROIs...',...
     'CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
-for i = 1:size(img_unif,1)
-    waitbar(i/size(img_unif,1),f,sprintf('Simulating Column %.0f of %.0f',i,size(img_unif,1)))
-    for j = 1:size(img_unif,2)
-        if roi_index(i,j) == 0
-            mean_val(i,j) = 0; % don't create small ROI if centre outside large ROI
-        else     
-            roi = (img_rows - i).^2 + (img_cols - j).^2 <= r_small.^2; % create ~1cm^2 small circular ROI
-            roi_vals = img_unif_masked(roi); % retrieve small ROI values
-            if length(nonzeros(roi_vals)) < length(find(roi))
-                mean_val(i,j) = 0; % don't create small ROI if centre outside large ROI
-            else
-                mean_val(i,j) = mean(nonzeros(roi_vals)); % take mean
-            end
-        end
+tic
+for k = 1:nnz(roi_index)
+%     waitbar(k/nnz(roi_index),f,sprintf('Simulating Row %.0f, Column %.0f',lrows(k),lcols(k)))
+    centre = [lrows(k),lcols(k)];
+    trans_mask = [rows+centre(1)-centroid(1),cols+centre(2)-centroid(2)];
+    ind = sub2ind(size(img_unif_masked),trans_mask(:,1),trans_mask(:,2));
+    roi = img_unif_masked(ind);
+    if nnz(roi) < length(find(base_mask))
+        mean_array(lrows(k),lcols(k)) = 0;
+    else
+        mean_array(lrows(k),lcols(k)) = mean(nonzeros(roi),'all');
     end
 end
-delete(f)
+toc
 
-sig_max = max(nonzeros(mean_val(:))); % find max signal
-sig_min = min(nonzeros(mean_val(:))); % find min signal
+sig_max = max(nonzeros(mean_array(:))); % find max signal
+sig_min = min(nonzeros(mean_array(:))); % find min signal
 
-[max_row, max_col] = find(mean_val == sig_max,1); % find centre of max signal ROI
-[min_row, min_col] = find(mean_val == sig_min,1); % find centre of min signal ROI
+[max_row, max_col] = find(mean_array == sig_max,1); % find centre of max signal ROI
+[min_row, min_col] = find(mean_array == sig_min,1); % find centre of min signal ROI
 
 PIU = 100*(1 - (sig_max-sig_min)/(sig_max+sig_min)); % Conventional ACR uniformity
 
@@ -112,6 +136,7 @@ smooth_img_unif = (1/sum(smooth_filter(:))).*conv2(img_unif,smooth_filter,'same'
 smooth_img_unif_masked = roi_index.*smooth_img_unif; % mask based on large ROI
 max_smooth = max(smooth_img_unif_masked(roi_index)); % find max
 min_smooth = min(smooth_img_unif_masked(roi_index)); % find min
+
 
 PDNU = 100*(max_smooth-min_smooth)/(max_smooth+min_smooth); % calculate PDNU
 
