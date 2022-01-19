@@ -23,7 +23,7 @@ thresh = 40;
 
 % Find centroid
 bhull = bwmorph(bwconvhull(img_SNR(:,:,1)>thresh/100*max(img_SNR(:))),'thin',1); % create convex hull image
-centroid = floor(regionprops(bhull,'Centroid').Centroid); % determine centroid from convex hull image
+centroid = ACR_Centroid(squeeze(img_ACR(:,:,:,1))); % determine centroid from convex hull image
 
 imshow(img_SNR(:,:,1),[],'InitialMagnification',400)
 hold on

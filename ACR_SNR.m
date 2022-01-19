@@ -28,7 +28,7 @@ thresh = 40;
 
 % Find centroid
 bhull = bwmorph(bwconvhull(img_SNR>thresh/100*max(img_SNR(:))),'thin',1); % create convex hull image
-centroid = ACR_Centroid; % determine centroid
+centroid = ACR_Centroid(img_ACR); % determine centroid
 
 imshow(img_SNR,[],'InitialMagnification',400)
 hold on

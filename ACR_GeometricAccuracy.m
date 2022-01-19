@@ -68,7 +68,7 @@ if ~isempty(img_loc)
     title('Localiser')
 end
 %% Resolution Insert
-img_hull_insert = bwconvhull(bwareaopen(edge(img_insert,'Canny'),50)); % use convex hull in case of air bubble!
+img_hull_insert = bwconvhull(bwareaopen(edge(img_insert,'Canny'),1000*size(img_ACR,1)/512)); % use convex hull in case of air bubble!
 
 centroid = ACR_Centroid(img_ACR); % determine centroid
 
@@ -92,7 +92,7 @@ quiver(insert_extent_h(2),centroid(2),insert_extent_h(end)-insert_extent_h(1),0,
 % text(insert_extent_h(2),centroid_insert(2),sprintf('L = %.1fmm',insert_dist_h),'color','w') % label with measured distance
 title('Resolution Insert')
 %% Distortion Grid
-img_hull_grid = bwconvhull(bwareaopen(edge(img_grid,'Canny'),50));
+img_hull_grid = bwconvhull(bwareaopen(edge(img_grid,'Canny'),1000*size(img_ACR,1)/512));
 
 % Horizontal and Vertical
 line_prof_v = improfile(img_hull_grid,[centroid(1) centroid(1)],[1 size(img_grid,2)]); % take a vertical line profile
