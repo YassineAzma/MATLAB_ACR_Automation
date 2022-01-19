@@ -116,5 +116,5 @@ for m = 1:answer
 end
 
 if strcmp(options.Orientation,'sagittal') || strcmp(options.Orientation,'coronal')
-%     img_ACR = ACR_OrientationCheck(img_ACR,obj_ACR,options);
+    img_ACR = ACR_OrientationCheck(img_ACR,obj_ACR,options);
 end

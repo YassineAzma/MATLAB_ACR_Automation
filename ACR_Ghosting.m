@@ -2,7 +2,7 @@
 % by Yassine Azma (Oct 2021)
 %
 
-function PSG = ACR_Ghosting(img_ACR,obj_ACR)
+% function PSG = ACR_Ghosting(img_ACR,obj_ACR)
 close all
 
 if size(img_ACR,4) > 1 % check if input array contains multiple ACR series
@@ -21,11 +21,11 @@ end
 
 r = 8; % for ~201cm^2 circular ROI
 r_img = ceil(10*r./res(1)); % equivalent pixel radius
-thresh = 40;
+thresh = 20;
 
 % Find centroid
 bhull = bwconvhull(img_unif>thresh/100*max(img_unif(:))); % create binary image
-centroid = floor(regionprops(bhull,'Centroid').Centroid); % determine centroid from convex hull image
+centroid = ACR_Centroid(img_ACR); % determine centroid from convex hull image
 
 imshow(img_unif,[],'InitialMagnification',400)
 hold on
@@ -66,10 +66,13 @@ end
 roi_index = (img_rows - centroid(2) - 5).^2 + (img_cols - centroid(1)).^2 <= r_img.^2; % create large ROI 
 
 % Elliptical ROIs
-w_point = find(sum(bhull,1)>0,1,'first')-1; % westmost point
-e_point = find(sum(bhull,1)>0,1,'last')-1; % eastmost point
-n_point = find(sum(bhull,2)>0,1,'first')-1; % northmost point
-s_point = find(sum(bhull,2)>0,1,'last')-1; % southmost point
+w_point = centroid(2) - 90/res(1); % westmost point
+e_point = centroid(2) + 90/res(1); % eastmost point
+n_point = centroid(1) - 95/res(2); % northmost point
+s_point = centroid(1) + 90/res(2); % southmost point
+
+h_z_point = find(improfile(img_unif,[w_point w_point],[0 size(img_unif,2)])==0); % for distortion correction, FoV changes set pixel values to 0
+v_z_point = find(improfile(img_unif,[0 size(img_unif,1)],[n_point n_point])==0);
 
 w_ellip_centre = [centroid(2) floor(w_point/2)];
 w_ellip_roi_index = ((img_rows - w_ellip_centre(1))/4).^2 + (img_cols - w_ellip_centre(2)).^2 <= ceil(10./res(1)).^2; % create W large ROI

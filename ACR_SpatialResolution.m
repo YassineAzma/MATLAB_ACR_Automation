@@ -23,7 +23,7 @@ end
 
 thresh = bwareaopen(img_insert > 0.15*max(img_insert(:)),5); % threshold and remove small unconnected pixels
 centroid_mask = bwconvhull(thresh); % convex hull image
-centroid = regionprops(centroid_mask,'Centroid').Centroid; % find centroid
+centroid = ACR_Centroid(img_ACR); % find centroid
 
 mask = img_insert < 0.2*max(img_insert(:)); % threshold
 cropped_mask = mask(round(centroid(2)):end,:); % crop image based on centroid

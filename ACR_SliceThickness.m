@@ -34,7 +34,7 @@ dims_img = round(dims.*(1./res)); % dimensions of insert in pixels
 
 % Find centroid
 bhull = bwmorph(bwconvhull(img_insert>0.3*max(img_insert(:))),'thin',1); % create convex hull image
-centroid = floor(regionprops(bhull,'Centroid').Centroid); % determine centroid from convex hull image
+centroid = ACR_Centroid(img_ACR); % determine centroid
 
 % Find rotation of phantom
 % TO DO: LINE PROFILES TO FIND ASSYMMETRY?
@@ -46,7 +46,7 @@ x = round([centroid(1) - floor(0.6*dims_img(1)/2), centroid(1) + floor(0.6*dims_
 y = round([centroid(2) + floor(dims_img(2)*0.35), centroid(2) + floor(dims_img(2)*0.35),... 
     centroid(2) - floor(dims_img(2)*0.35), centroid(2) - floor(dims_img(2)*0.35)]); % y points
 
-imshow(img_insert,[0 0.1*max(img_insert(:))],'InitialMagnification',400)
+imshow(img_insert,[0 0.5*max(img_insert(:))],'InitialMagnification',400)
 hold on
 plot([x(1),x(2)],[y(1),y(2)],'b')
 plot([x(3),x(4)],[y(3),y(4)],'r')
@@ -67,7 +67,7 @@ while strcmp(answer,'No')
             [~,y] = ginput(2);
 
             y = [y(1) y(1) y(2) y(2)];
-            imshow(img_insert,[0 0.1*max(img_insert(:))],'InitialMagnification',400)
+            imshow(img_insert,[0 0.5*max(img_insert(:))],'InitialMagnification',400)
             hold on
             plot([x(1),x(2)],[y(1) y(2)],'b')
             plot([x(3),x(4)],[y(3) y(4)],'r')

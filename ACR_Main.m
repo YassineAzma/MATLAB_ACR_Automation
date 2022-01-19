@@ -34,13 +34,6 @@ options.Orientation = 'axial';
 % Opt to include the localiser in the geometric accuracy test
 options.IncludeLocaliser = 'no';
 
-%%% Intensity Gradient Correction
-% Selection: ['yes' or 'no']
-%
-% EXPERIMENTAL: Only use for datasets with intensity gradients that make
-% thresholding a poor option.
-options.IntensityCorrection = 'no';
-
 [img_loc,img_ACR,obj_loc,obj_ACR,info] = ACR_DataSort(options);
 %% Geometric Accuracy
 

@@ -30,7 +30,7 @@ for n = 1:2
     % Find centroid
     thresh = bwareaopen(img_insert>0.2*max(img_insert(:)),500); % threshold and remove unconnected pixels
     bhull = bwconvhull(thresh); % create convex hull image
-    centroid = round(regionprops(bhull,'Centroid').Centroid); % determine centroid from convex hull image
+    centroid = ACR_Centroid(img_ACR);
 
     first_row = find(sum(bhull,1)>0,1,'first')-1;  % Bottom dot in image #1
     last_row = find(sum(bhull,2)>0,1,'first')-1; % Top dot in image #1
