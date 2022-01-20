@@ -7,7 +7,7 @@
 % intensity uniformity is then calculated based on the eligible ROIs with 
 % the maximum and minimum means. The results are visualised.
 
-function PIU = ACR_Uniformity(img_ACR,obj_ACR)
+% function PIU = ACR_Uniformity(img_ACR,obj_ACR)
 close all
 
 if size(img_ACR,4) > 1 % check if input array contains multiple ACR series
@@ -130,7 +130,7 @@ hold on
 plot(r_img*cosd(0:1:360)+centroid(1),r_img*sind(0:1:360)+centroid(2)+d_void)
 plot([max_col min_col],[max_row min_row],'r*')
 plot(r_small*cosd(0:1:360)+max_col,r_small*sind(0:1:360)+max_row,'color','y')
-text(max_col, max_row+floor(10./res(1)),...
+text(max_col, max_row+floor(10./res(1)),... T
     sprintf('max = %.1f',sig_max),'color','w','fontsize',10) % label with measured mean
 plot(r_small*cosd(0:1:360)+min_col,r_small*sind(0:1:360)+min_row,'color','y')
 text(min_col, min_row+floor(10./res(1)),...
