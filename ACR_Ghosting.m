@@ -68,19 +68,19 @@ roi_index = (img_rows - centroid(2) - d_void).^2 + (img_cols - centroid(1)).^2 <
 
 % Elliptical ROIs
 w_point = find(sum(bhull,1)>0,1,'first')-1; % westmost point
-if w_point < 0.1*size(img_unif,1) || w_point > centroid(1)
+if w_point > 0.1*size(img_unif,1) || w_point > centroid(1)
     w_point = centroid(1)-95/res(1);
 end
 e_point = find(sum(bhull,1)>0,1,'last')-1; % eastmost point
-if e_point > 0.9*size(img_unif,1) || e_point < centroid(1)
+if e_point < 0.9*size(img_unif,1) || e_point < centroid(1)
     e_point = centroid(1)+95/res(1);
 end
 n_point = find(sum(bhull,2)>0,1,'first')-1; % northmost point
-if n_point < 0.1*size(img_unif,2) || n_point > centroid(2)
+if n_point > 0.1*size(img_unif,2) || n_point > centroid(2)
     n_point = centroid(2)-95/res(1);
 end
 s_point = find(sum(bhull,2)>0,1,'last')-1; % southmost point
-if s_point > 0.9*size(img_unif,2) || s_point < centroid(2)
+if s_point < 0.9*size(img_unif,2) || s_point < centroid(2)
     s_point = centroid(2)+95/res(1);
 end
 

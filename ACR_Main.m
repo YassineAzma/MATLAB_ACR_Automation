@@ -7,6 +7,7 @@
 % 
 % Image Processing Toolbox
 % Signal Processing Toolbox
+% Curve Fitting Toolbox ** only required for MTF
 
 %% Data Sorting
 % Upon running this script, you will be prompted to open data from a folder 
@@ -21,7 +22,7 @@
 clearvars
 
 % OPTIONS
-%%% Physical Orientation of Phantom 
+%%% Physical Orientation of Phantom - NEEDED FOR LOCALISER
 % Selection: ['axial','sagittal' or 'coronal']
 %
 % This should be 'axial' unless the phantom is set up in an orientation 
@@ -63,3 +64,6 @@ SNR = ACR_SNR(img_ACR,obj_ACR)
 if size(img_ACR,4) > 1
     sub_SNR = ACR_subSNR(img_ACR,obj_ACR)
 end
+%% MTF (Experimental) ONLY USE ON SLANTED EDGE
+
+eff_res = ACR_MTF(img_ACR,obj_ACR)

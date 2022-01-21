@@ -7,7 +7,7 @@
 % intensity uniformity is then calculated based on the eligible ROIs with 
 % the maximum and minimum means. The results are visualised.
 
-% function PIU = ACR_Uniformity(img_ACR,obj_ACR)
+function PIU = ACR_Uniformity(img_ACR,obj_ACR)
 close all
 
 if size(img_ACR,4) > 1 % check if input array contains multiple ACR series

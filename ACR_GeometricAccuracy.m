@@ -68,9 +68,26 @@ if ~isempty(img_loc)
     title('Localiser')
 end
 %% Resolution Insert
-img_hull_insert = bwconvhull(bwareaopen(edge(img_insert,'Canny'),1000*size(img_ACR,1)/512)); % use convex hull in case of air bubble!
-
 centroid = ACR_Centroid(img_ACR); % determine centroid
+
+mask_insert = bwareaopen(edge(img_insert,'Canny'),1500*size(img_ACR,1)/600); % use convex hull in case of air bubble!
+label_map_insert = bwlabel(mask_insert);
+if max(label_map_insert,[],'all') > 1
+    for k = 1:max(label_map_insert,[],'all')
+        label_img = label_map_insert == k;
+        label_centroid(:,k) = regionprops(label_img).Centroid;
+        label_bbox(:,k) = regionprops(label_img).BoundingBox;
+        label_radius(k) = rms(res_ACR)*mean(label_bbox(3:4,k))/2;
+
+        centroid_test(k) = rms(label_centroid(:,k) - centroid');
+        radius_test(k) = abs(label_radius(k) - 95);
+    end
+    test = sqrt(centroid_test.^2+radius_test.^2);
+    ind = find(test==min(test));
+    img_hull_insert = bwconvhull(label_map_insert==ind);
+else
+    img_hull_insert = bwconvhull(mask_insert);
+end
 
 line_prof_v = improfile(img_hull_insert,[centroid(2) centroid(2)],[1 size(img_insert,2)]); % take a vertical line profile
 line_prof_h = improfile(img_hull_insert,[1 size(img_insert,1)],[centroid(1) centroid(1)]); % take a horizontal line profile
@@ -92,7 +109,25 @@ quiver(insert_extent_h(2),centroid(2),insert_extent_h(end)-insert_extent_h(1),0,
 % text(insert_extent_h(2),centroid_insert(2),sprintf('L = %.1fmm',insert_dist_h),'color','w') % label with measured distance
 title('Resolution Insert')
 %% Distortion Grid
-img_hull_grid = bwconvhull(bwareaopen(edge(img_grid,'Canny'),1000*size(img_ACR,1)/512));
+
+mask_grid = bwareaopen(edge(img_grid,'Canny'),1500*size(img_ACR,1)/600); % use convex hull in case of air bubble!
+label_map_grid = bwlabel(mask_grid);
+if max(label_map_grid,[],'all') > 1
+    for k = 1:max(label_map_grid,[],'all')
+        label_img = label_map_grid == k;
+        label_centroid(:,k) = regionprops(label_img).Centroid;
+        label_bbox(:,k) = regionprops(label_img).BoundingBox;
+        label_radius(k) = rms(res_ACR)*mean(label_bbox(3:4,k))/2;
+
+        centroid_test(k) = rms(label_centroid(:,k) - centroid');
+        radius_test(k) = abs(label_radius(k) - 95);
+    end
+    test = sqrt(centroid_test.^2+radius_test.^2);
+    ind = find(test==min(test));
+    img_hull_grid = bwconvhull(label_map_grid==ind);
+else
+    img_hull_grid = bwconvhull(mask_grid);
+end
 
 % Horizontal and Vertical
 line_prof_v = improfile(img_hull_grid,[centroid(1) centroid(1)],[1 size(img_grid,2)]); % take a vertical line profile

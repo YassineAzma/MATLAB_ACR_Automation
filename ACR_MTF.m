@@ -5,7 +5,17 @@
 % Run ACR_DataSort before running this. Delete any non-image files from the
 % folder - need to include some form of file filtering!
 %% ROI Selection
-% function eff_res = ACR_MTF(img_ACR,obj_ACR,level)
+function eff_res = ACR_MTF(img_ACR,obj_ACR,level)
+close all
+
+if size(img_ACR,4) > 1 % check if input array contains multiple ACR series
+    img_insert = squeeze(double(img_ACR(:,:,1,1))); % if yes, only process the first
+    img_grid = squeeze(double(img_ACR(:,:,5,1))); % if yes, only process the first
+    waitfor(msgbox('4D array detected. Only processing first axial series.'));
+else
+    img_insert = double(img_ACR(:,:,1));
+    img_grid = double(img_ACR(:,:,5));
+end
 
 level = 0.5;
 if isempty(obj_ACR.getAttributeByName('PixelSpacing')) % Multi-frame check
