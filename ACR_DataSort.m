@@ -102,6 +102,17 @@ for m = 1:answer
         [~,ind] = sort(z); % Sort slice locations into sequential order
 
         img_ACR(:,:,:,m) = img_ACR(:,:,ind,m); % Reorder based on ascending slice location
+
+        orientation = round(list.Item_1.PlaneOrientationSequence.Item_1.ImageOrientationPatient);
+
+        if orientation == [0 1 0 0 0 -1]' % SAGITTAL
+            img_ACR = imrotate(img_ACR,-90,'bilinear','crop');
+            zero_check_1 = length(find(0.1*max(img_ACR(:,:,1),[],'all') < img_ACR(:,:,1)==0));
+            zero_check_11 = length(find(0.1*max(img_ACR(:,:,11),[],'all') < img_ACR(:,:,11)==0));
+            if zero_check_1 < zero_check_11
+                img_ACR = flipdim(img_ACR,3);
+            end
+        end
     else
         for k = 1:size(Files,1) % Single-frame sorting
             img_ACR(:,:,k,m) = double(dicomread(deblank(char(Files(k,:))))); % Create array containing element data
@@ -112,9 +123,30 @@ for m = 1:answer
         [~,ind] = sort(z); % Sort slice locations into sequential order
 
         img_ACR(:,:,:,m) = img_ACR(:,:,ind,m); % Reorder based on ascending slice location
+
+        try
+            switch obj_ACR.getAttributeByName('0051,100E')
+                case 'Sag'
+                    img_ACR = imrotate(img_ACR,-90,'bilinear','crop');
+                    zero_check_1 = length(find(0.1*max(img_ACR(:,:,1),[],'all') > img_ACR(:,:,1)==0));
+                    zero_check_11 = length(find(0.1*max(img_ACR(:,:,11),[],'all') > img_ACR(:,:,11)==0));
+                    if zero_check_1 > zero_check_11
+                        img_ACR = flipdim(img_ACR,3);
+                    end
+            end
+        catch
+            orientation = round(obj_ACR.getAttributeByName('ImageOrientationPatient'),3);
+
+            if orientation == [0 1 0 0 0 -1]'; % SAGITTAL
+                img_ACR = imrotate(img_ACR,-90,'bilinear','crop');
+                zero_check_1 = length(find(0.1*max(img_ACR(:,:,1),[],'all') < img_ACR(:,:,1)==0));
+                zero_check_11 = length(find(0.1*max(img_ACR(:,:,11),[],'all') < img_ACR(:,:,11)==0));
+                if zero_check_1 < zero_check_11
+                    img_ACR = flipdim(img_ACR,3);
+                end
+            end
+        end
     end
 end
 
-if strcmp(options.Orientation,'sagittal') || strcmp(options.Orientation,'coronal')
-%     img_ACR = ACR_OrientationCheck(img_ACR,obj_ACR,options);
-end
+

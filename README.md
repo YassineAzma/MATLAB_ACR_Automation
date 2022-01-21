@@ -29,4 +29,3 @@ Within this large ROI, small ROIs of roughly 1cm<sup>2</sup> are placed within i
 </p>
 
 The function is also capable of calculating the Peak Deviation Non-Uniformity (PDNU) and the Normalised Absolute Average Deviation Uniformity (NAADU) as defined by [NEMA](https://www.nema.org/standards/view/determination-of-image-uniformity-in-diagnostic-magnetic-resonance-images). These are not reported by the function, but can by modified to do so trivially.
-
