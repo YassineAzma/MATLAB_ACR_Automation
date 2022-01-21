@@ -2,10 +2,9 @@
 ## _Introduction_
 
 This repository contains scripts for automation of key [ACR tests](https://www.acraccreditation.org/-/media/acraccreditation/documents/mri/largephantomguidance.pdf), with additional functionality included for calculation of both single-image and subtraction Signal-to-Noise Ratio along with Modulation Transfer Function.
+In its current form, all functions can be run readily from the ACR_Main.m script, which also contains additional options that can be customised as needed.
 
-All functions can be run readily from the ACR_Main.m script, which also contains additional options that can be customised as needed.
-
-If anything is not clear, please leave a message or submit an issue.
+If anything is not clear please leave a message in [Discussions](https://github.com/YassineRMH/MATLAB_ACR_Automation/discussions). If you've discovered a bug or would like to make a feature request, please submit this in [Issues](https://github.com/YassineRMH/MATLAB_ACR_Automation/issues).
 
 Documentation will be added for scripts that are nominally finished.
 
@@ -23,7 +22,7 @@ This is used to determine the location of the 195-205cm<sup>2</sup> ROI within t
 <img src="https://user-images.githubusercontent.com/96583432/150523943-f08567e7-7d15-4cbb-8ee5-7dee97528b80.png" width="500">
 </p>
 
-Within this large ROI, small ROIs of roughly 1cm<sup>2</sup> are placed within it. The ROIs with maximum and minimum value are then displayed on an image:
+Within this large ROI, small ROIs of roughly 1cm<sup>2</sup> are placed within it. The ROIs with maximum and minimum mean value are used to calculate the percent integral uniformity and are then displayed in an image:
 
 <p align="center">
 <img src="https://user-images.githubusercontent.com/96583432/150523525-cd16f82e-3ea4-42a8-aafb-ddd851d59bc2.png" width="500">
