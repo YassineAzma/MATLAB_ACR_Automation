@@ -1,6 +1,12 @@
-function centroid = ACR_Centroid(img_ACR)
+%% ACR Data Sort
+% by Yassine Azma (Jan 2022)
+% 
+% This script calculates the centroid of the ACR phantom using a 
+% centre-of-mass calculation.
 
-igc_img_ACR = ACR_IntensityGradientCorrection(img_ACR);
+function centroid = ACR_Centroid(img_ACR,obj_ACR)
+
+igc_img_ACR = ACR_IntensityGradientCorrection(img_ACR,obj_ACR);
 
 img_insert = igc_img_ACR(:,:,7);
 thresh = bwareaopen(img_insert>0.25*max(img_insert(:)),500); % threshold and remove unconnected pixels

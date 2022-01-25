@@ -6,9 +6,9 @@
 % then reordered, in the event that an interleaved sequence was selected,
 % and the DICOM metadata for later extraction of the pixel spacing are produced. 
 
-function [img_loc, img_ACR, obj_loc, obj_ACR, dir_loc, dir_ACR] = ACR_DataSort(options)
+function [img_loc, img_ACR, obj_loc, obj_ACR] = ACR_DataSort(options)
 
-% Localiser
+%% Localiser
 if strcmp(options.IncludeLocaliser,'yes')
     switch options.Orientation
         case 'axial'
@@ -124,29 +124,25 @@ for m = 1:answer
 
         img_ACR(:,:,:,m) = img_ACR(:,:,ind,m); % Reorder based on ascending slice location
 
+        check = ACR_SliceInversionCheck(img_ACR,obj_ACR);
+        if check == 1
+            img_ACR = flipdim(img_ACR,3);
+        end
         try
             switch obj_ACR.getAttributeByName('0051,100E')
                 case 'Sag'
                     img_ACR = imrotate(img_ACR,-90,'bilinear','crop');
-                    zero_check_1 = length(find(0.1*max(img_ACR(:,:,1),[],'all') > img_ACR(:,:,1)==0));
-                    zero_check_11 = length(find(0.1*max(img_ACR(:,:,11),[],'all') > img_ACR(:,:,11)==0));
-                    if zero_check_1 > zero_check_11
-                        img_ACR = flipdim(img_ACR,3);
-                    end
             end
         catch
             orientation = round(obj_ACR.getAttributeByName('ImageOrientationPatient'),3);
 
-            if orientation == [0 1 0 0 0 -1]'; % SAGITTAL
+            if orientation == [0 1 0 0 0 -1]' % SAGITTAL
                 img_ACR = imrotate(img_ACR,-90,'bilinear','crop');
-                zero_check_1 = length(find(0.1*max(img_ACR(:,:,1),[],'all') < img_ACR(:,:,1)==0));
-                zero_check_11 = length(find(0.1*max(img_ACR(:,:,11),[],'all') < img_ACR(:,:,11)==0));
-                if zero_check_1 < zero_check_11
-                    img_ACR = flipdim(img_ACR,3);
-                end
             end
         end
     end
 end
+
+
 
 

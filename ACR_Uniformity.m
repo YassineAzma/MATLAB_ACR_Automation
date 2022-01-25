@@ -5,7 +5,7 @@
 % large ROI (~200cm^2). Small ROI values are excluded which have their
 % central point outside the large ROI. The percentage
 % intensity uniformity is then calculated based on the eligible ROIs with 
-% the maximum and minimum means. The results are visualised.
+% the maximum and minimum means. The res_ACRults are visualised.
 
 function PIU = ACR_Uniformity(img_ACR,obj_ACR)
 close all
@@ -17,54 +17,14 @@ else
     img_unif = double(img_ACR(:,:,7));
 end
 
-if isempty(obj_ACR.getAttributeByName('PixelSpacing')) % Multi-frame check
-    list = obj_ACR.getAttributeByName('PerFrameFunctionalGroupsSequence');
-    res = list.Item_1.PixelMeasuresSequence.Item_1.PixelSpacing;
-else
-    res = obj_ACR.getAttributeByName('PixelSpacing'); % retrieve ACR in-plane resolution
-end
+res_ACR = ACR_RetrievePixelSpacing(obj_ACR);
 
-r_img = ceil(80/res(1)); % equivalent pixel radius
-r_small = ceil(sqrt(100/pi)/res(1)); % equivalent pixel radius for small ROI
-d_void = ceil(5/res(1)); % distance from top of phantom to end of void in mm
-thresh = 40;
+r_img = ceil(80/res_ACR(1)); % equivalent pixel radius
+r_small = ceil(sqrt(100/pi)/res_ACR(1)); % equivalent pixel radius for small ROI
+d_void = ceil(5/res_ACR(1)); % distance from top of phantom to end of void in mm
 
 % Find centroid
-centroid = ACR_Centroid(img_ACR); % determine centroid
-
-imshow(img_unif,[],'InitialMagnification',400)
-hold on
-plot(centroid(1),centroid(2),'rx','MarkerSize',12)
-
-answer = questdlg('Is the current centroid location correct?',...
-    'Centroid Location Confirmation',...
-    'Yes','No','No');
-
-while strcmp(answer,'No')
-    switch answer
-        case 'No'
-            prompt = {['Enter new threshold [0-100] (current = ' num2str(thresh) '):']};
-            dlgtitle = 'Input';
-            dims = [1 50];
-            definput = {'20'};
-            thresh = inputdlg(prompt,dlgtitle,dims,definput);
-            thresh = str2double(thresh);
-
-            bhull = bwconvhull(img_unif>thresh/100*max(img_unif(:))); % create binary image
-            centroid = floor(regionprops(bhull,'Centroid').Centroid); % determine centroid from convex hull image
-
-            imshow(img_unif,[],'InitialMagnification',400)
-            hold on
-            plot(centroid(1),centroid(2),'rx','MarkerSize',12)
-
-            pause(1)
-            answer = questdlg('Is the current centroid location suitable?',...
-                'Centroid Location Confirmation',...
-                'Yes','No','No');
-        case 'Yes'
-            break
-    end
-end
+centroid = ACR_Centroid(img_ACR,obj_ACR); % determine centroid
 
 % ROI
 [img_cols, img_rows] = meshgrid(1:size(img_unif,1),1:size(img_unif,2)); % create grid 
@@ -75,29 +35,6 @@ roi = zeros(size(roi_index)); % pre-allocate small ROI arrays
 mean_array = zeros(size(roi_index)); % pre-allocate mean of small ROIs
 
 img_unif_masked = roi_index.*img_unif; % mask uniformity slice with large ROI
-
-% OLD, SLOW NESTED LOOP
-% tic
-% f = waitbar(0,'1','Name','Placing Small ROIs...',...
-%     'CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
-% for i = 1:size(img_unif,1)
-%     waitbar(i/size(img_unif,1),f,sprintf('Simulating Column %.0f of %.0f',i,size(img_unif,1)))
-%     for j = 1:size(img_unif,2)
-%         if roi_index(i,j) == 0
-%             mean_array(i,j) = 0; % don't create small ROI if centre outside large ROI
-%         else     
-%             roi = (img_rows - i).^2 + (img_cols - j).^2 <= r_small.^2; % create ~1cm^2 small circular ROI
-%             roi_vals = img_unif_masked(roi); % retrieve small ROI values
-%             if length(nonzeros(roi_vals)) < length(find(roi))
-%                 mean_array(i,j) = 0; % don't create small ROI if centre outside large ROI
-%             else
-%                 mean_array(i,j) = mean(nonzeros(roi_vals)); % take mean
-%             end
-%         end
-%     end
-% end
-% delete(f)
-% toc
 
 base_mask = (img_rows - centroid(2) - d_void).^2 + (img_cols - centroid(1)).^2 <= r_small.^2;
 [rows,cols] = find(base_mask);
@@ -130,10 +67,10 @@ hold on
 plot(r_img*cosd(0:1:360)+centroid(1),r_img*sind(0:1:360)+centroid(2)+d_void)
 plot([max_col min_col],[max_row min_row],'r*')
 plot(r_small*cosd(0:1:360)+max_col,r_small*sind(0:1:360)+max_row,'color','y')
-text(max_col, max_row+floor(10./res(1)),... T
+text(max_col, max_row+floor(10./res_ACR(1)),... T
     sprintf('max = %.1f',sig_max),'color','w','fontsize',10) % label with measured mean
 plot(r_small*cosd(0:1:360)+min_col,r_small*sind(0:1:360)+min_row,'color','y')
-text(min_col, min_row+floor(10./res(1)),...
+text(min_col, min_row+floor(10./res_ACR(1)),...
     sprintf('min = %.1f',sig_min),'color','w','fontsize',10) % label with measured mean
 % xlabel(['PIU = ' num2str(round(PIU,2)) '%'],'fontweight','bold','fontsize',14)
 % title('Uniformity')
