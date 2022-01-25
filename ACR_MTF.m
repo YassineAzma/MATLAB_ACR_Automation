@@ -5,27 +5,18 @@
 % Run ACR_DataSort before running this. Delete any non-image files from the
 % folder - need to include some form of file filtering!
 %% ROI Selection
-function eff_res = ACR_MTF(img_ACR,obj_ACR,level)
+function eff_res = ACR_MTF(img_ACR,obj_ACR)
 close all
 
 if size(img_ACR,4) > 1 % check if input array contains multiple ACR series
     img_insert = squeeze(double(img_ACR(:,:,1,1))); % if yes, only process the first
-    img_grid = squeeze(double(img_ACR(:,:,5,1))); % if yes, only process the first
     waitfor(msgbox('4D array detected. Only processing first axial series.'));
 else
     img_insert = double(img_ACR(:,:,1));
-    img_grid = double(img_ACR(:,:,5));
 end
 
 level = 0.5;
-if isempty(obj_ACR.getAttributeByName('PixelSpacing')) % Multi-frame check
-    list = obj_ACR.getAttributeByName('PerFrameFunctionalGroupsSequence');
-    res_ACR = list.Item_1.PixelMeasuresSequence.Item_1.PixelSpacing;
-else
-    res_ACR = obj_ACR.getAttributeByName('PixelSpacing'); % retrieve ACR in-plane resolution
-end
-
-img_insert = img_ACR(:,:,1); % resolution insert image
+res_ACR = ACR_RetrievePixelSpacing(obj_ACR);
 
 imshow(img_insert,[],'InitialMagnification',300) % magnify
 roi = createMask(drawrectangle); % create rectangular ROI
@@ -159,7 +150,7 @@ opts.StartPoint = [0 mean(lines_interp) 0.2 findchangepts(lines_interp,'MaxNumCh
 opts.Weights = weightsData;
 
 % Fit model to data.
-[fitresult, gof] = fit( xData, yData, ft, opts );
+[fitresult, ~] = fit( xData, yData, ft, opts );
 ERF = feval(fitresult,xData);
 
 figure
@@ -227,7 +218,6 @@ MTF_corr = MTF(zero_freq:end); % discard symmetrical negative freqs of MTF
 MTF_corr_sig = MTF_sig(zero_freq:end); % discard symmetrical negative freqs of MTF
 freq_corr = freq(zero_freq:end); % same as above for spatial frequencies
 
-freq_interp = [];
 freq_interp = interp1(MTF_corr,freq_corr,0:0.005:1,'pchip'); % interpolate MTF
 freq_interp_sig = interp1(MTF_corr_sig,freq_corr,0:0.005:1,'pchip'); % interpolate MTF
 eq_lp = freq_interp(0:0.005:1==level); % Closest spatial frequency to a MTF of 0.5

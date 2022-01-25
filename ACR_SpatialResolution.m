@@ -14,16 +14,9 @@ else
     img_insert = double(img_ACR(:,:,1));
 end
 
-if isempty(obj_ACR.getAttributeByName('PixelSpacing')) % Multi-frame check
-    list = obj_ACR.getAttributeByName('PerFrameFunctionalGroupsSequence');
-    res_ACR = list.Item_1.PixelMeasuresSequence.Item_1.PixelSpacing; % retrieve ACR in-plane resolution
-else
-    res_ACR = obj_ACR.getAttributeByName('PixelSpacing'); % retrieve ACR in-plane resolution
-end
+res_ACR = ACR_RetrievePixelSpacing(obj_ACR);
 
-thresh = bwareaopen(img_insert > 0.15*max(img_insert(:)),5); % threshold and remove small unconnected pixels
-centroid_mask = bwconvhull(thresh); % convex hull image
-centroid = ACR_Centroid(img_ACR); % find centroid
+centroid = ACR_Centroid(img_ACR,obj_ACR); % find centroid
 
 mask = img_insert < 0.2*max(img_insert(:)); % threshold
 cropped_mask = mask(round(centroid(2)):end,:); % crop image based on centroid
@@ -31,7 +24,6 @@ cropped_mask = bwareaopen(imfill(cropped_mask,'holes'),50); % fill holes and rem
 cropped_mask = imclearborder(cropped_mask,18); % clear border
 
 w_point = find(sum(cropped_mask,1)>0,1,'first')-1 + round(32/res_ACR(1)); % westmost point
-e_point = find(sum(cropped_mask,1)>0,1,'last')-1 - round(10/res_ACR(1)); % eastmost point
 c = improfile(cropped_mask,[w_point+1 w_point+1],[1 size(cropped_mask,1)]);
 if isempty(find(c,1))
     c = improfile(cropped_mask,[w_point-1 w_point-1],[1 size(cropped_mask,1)]);
@@ -458,7 +450,7 @@ end
 %% Output
 % Resolvable Line Profiles
 
-imshow(img_insert(round(centroid(2)):end,:,1),[])
+imshow(img_insert(round(centroid(2)):end,:,1),[],'InitialMagnification',200)
 hold on
 if ~isempty(ul_resolv_11)
     if length(ul_resolv_11) == 2

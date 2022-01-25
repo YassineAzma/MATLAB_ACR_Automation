@@ -4,9 +4,12 @@
 % This script takes the ACR data and models it as a flat constant value
 % plus added orthogonal gradients and parabolas. Solving the regression 
 % problem using weighted linear least squares allows for the production of 
-% an image which is much flatter. This is used in the ACR_Centroid script.
+% an image which is much flatter and more easily thresholded. 
+% This is used in the ACR_Centroid script.
 
-function corr_img_ACR = ACR_IntensityGradientCorrection(img_ACR)
+function corr_img_ACR = ACR_IntensityGradientCorrection(img_ACR,obj_ACR)
+
+res_ACR = ACR_RetrievePixelSpacing(obj_ACR);
 
 dims = size(img_ACR,[1 2]);
 
@@ -27,12 +30,12 @@ for k = 1:size(img_ACR,3)
     aw = HpWH \ (H'*(wv.*img(:))); % Ordinary least squares for coefficients
 
     if abs(aw(2)) > abs(aw(3))
-        corr_img = img-imfill(wm>0.03,'holes').*reshape(H(:,[2 4])*aw([2,4]),dims);
-        edge_img = bwconvhull(bwareaopen(edge(corr_img,'Canny'),500));
-        corr_img_ACR(:,:,k) = edge_img.*corr_img;
+        corr_img = img-imfill(wm>0.05,'holes').*reshape(H(:,[2 4])*aw([2,4]),dims);
+        edge_img(:,:,k) = ACR_Threshold(corr_img,res_ACR);
+        corr_img_ACR(:,:,k) = edge_img(:,:,k).*corr_img;
     else
-        corr_img = img-imfill(wm>0.03,'holes').*reshape(H(:,[3 5])*aw([3,5]),dims);
-        edge_img = bwconvhull(bwareaopen(edge(corr_img,'Canny'),500));
-        corr_img_ACR(:,:,k) = edge_img.*corr_img;
+        corr_img = img-imfill(wm>0.05,'holes').*reshape(H(:,[3 5])*aw([3,5]),dims);
+        edge_img(:,:,k) = ACR_Threshold(corr_img,res_ACR);
+        corr_img_ACR(:,:,k) = edge_img(:,:,k).*corr_img;
     end
 end

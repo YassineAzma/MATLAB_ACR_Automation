@@ -9,6 +9,9 @@
 function L = ACR_GeometricAccuracy(img_loc,img_ACR,obj_loc,obj_ACR)
 close all
 
+rot_angle = ACR_FindRotation(img_ACR,obj_ACR);
+img_ACR = ACR_RotateImages(img_ACR,rot_angle);
+
 if size(img_ACR,4) > 1 % check if input array contains multiple ACR series
     img_insert = squeeze(double(img_ACR(:,:,1,1))); % if yes, only process the first
     img_grid = squeeze(double(img_ACR(:,:,5,1))); % if yes, only process the first
@@ -19,20 +22,10 @@ else
 end
 
 if ~isempty(obj_loc)
-    if isempty(obj_loc.getAttributeByName('PixelSpacing')) %Multi-frame check
-        list = obj_loc.getAttributeByName('PerFrameFunctionalGroupsSequence');
-        res_loc = list.Item_1.PixelMeasuresSequence.Item_1.PixelSpacing;
-    else
-        res_loc = obj_loc.getAttributeByName('PixelSpacing'); % retrieve localiser in-plane resolution
-    end
+    res_loc = ACR_RetrievePixelSpacing(obj_loc);
 end
 
-if isempty(obj_ACR.getAttributeByName('PixelSpacing')) % Multi-frame check
-    list = obj_ACR.getAttributeByName('PerFrameFunctionalGroupsSequence');
-    res_ACR = list.Item_1.PixelMeasuresSequence.Item_1.PixelSpacing;
-else
-    res_ACR = obj_ACR.getAttributeByName('PixelSpacing'); % retrieve ACR in-plane resolution
-end
+res_ACR = ACR_RetrievePixelSpacing(obj_ACR);
 %% Localiser
 
 if ~isempty(img_loc)
@@ -68,29 +61,12 @@ if ~isempty(img_loc)
     title('Localiser')
 end
 %% Resolution Insert
-centroid = ACR_Centroid(img_ACR); % determine centroid
+centroid = ACR_Centroid(img_ACR,obj_ACR); % determine centroid
 
-mask_insert = bwareaopen(edge(img_insert,'Canny'),1500*size(img_ACR,1)/600); % use convex hull in case of air bubble!
-label_map_insert = bwlabel(mask_insert);
-if max(label_map_insert,[],'all') > 1
-    for k = 1:max(label_map_insert,[],'all')
-        label_img = label_map_insert == k;
-        label_centroid(:,k) = regionprops(label_img).Centroid;
-        label_bbox(:,k) = regionprops(label_img).BoundingBox;
-        label_radius(k) = rms(res_ACR)*mean(label_bbox(3:4,k))/2;
+mask_insert = ACR_Threshold(img_insert,res_ACR,centroid);
 
-        centroid_test(k) = rms(label_centroid(:,k) - centroid');
-        radius_test(k) = abs(label_radius(k) - 95);
-    end
-    test = sqrt(centroid_test.^2+radius_test.^2);
-    ind = find(test==min(test));
-    img_hull_insert = bwconvhull(label_map_insert==ind);
-else
-    img_hull_insert = bwconvhull(mask_insert);
-end
-
-line_prof_v = improfile(img_hull_insert,[centroid(2) centroid(2)],[1 size(img_insert,2)]); % take a vertical line profile
-line_prof_h = improfile(img_hull_insert,[1 size(img_insert,1)],[centroid(1) centroid(1)]); % take a horizontal line profile
+line_prof_v = improfile(mask_insert,[centroid(2) centroid(2)],[1 size(img_insert,2)]); % take a vertical line profile
+line_prof_h = improfile(mask_insert,[1 size(img_insert,1)],[centroid(1) centroid(1)]); % take a horizontal line profile
 
 insert_extent_v = find(line_prof_v); % find non-zeros
 insert_extent_h = find(line_prof_h); % find non-zeros
@@ -110,28 +86,11 @@ quiver(insert_extent_h(2),centroid(2),insert_extent_h(end)-insert_extent_h(1),0,
 title('Resolution Insert')
 %% Distortion Grid
 
-mask_grid = bwareaopen(edge(img_grid,'Canny'),1500*size(img_ACR,1)/600); % use convex hull in case of air bubble!
-label_map_grid = bwlabel(mask_grid);
-if max(label_map_grid,[],'all') > 1
-    for k = 1:max(label_map_grid,[],'all')
-        label_img = label_map_grid == k;
-        label_centroid(:,k) = regionprops(label_img).Centroid;
-        label_bbox(:,k) = regionprops(label_img).BoundingBox;
-        label_radius(k) = rms(res_ACR)*mean(label_bbox(3:4,k))/2;
-
-        centroid_test(k) = rms(label_centroid(:,k) - centroid');
-        radius_test(k) = abs(label_radius(k) - 95);
-    end
-    test = sqrt(centroid_test.^2+radius_test.^2);
-    ind = find(test==min(test));
-    img_hull_grid = bwconvhull(label_map_grid==ind);
-else
-    img_hull_grid = bwconvhull(mask_grid);
-end
+mask_grid = ACR_Threshold(img_grid,res_ACR,centroid);
 
 % Horizontal and Vertical
-line_prof_v = improfile(img_hull_grid,[centroid(1) centroid(1)],[1 size(img_grid,2)]); % take a vertical line profile
-line_prof_h = improfile(img_hull_grid,[1 size(img_grid,2)],[centroid(2) centroid(2)]); % take a horizontal line profile
+line_prof_v = improfile(mask_grid,[centroid(1) centroid(1)],[1 size(img_grid,2)]); % take a vertical line profile
+line_prof_h = improfile(mask_grid,[1 size(img_grid,2)],[centroid(2) centroid(2)]); % take a horizontal line profile
 
 grid_extent_v = find(line_prof_v); % find non-zeros
 grid_extent_h = find(line_prof_h); % find non-zeros
@@ -144,12 +103,12 @@ rot_matrix_se = [cosd(45) -sind(45); sind(45) cosd(45)]; % Create 45 degree rota
 % rotate vertical line around centroid by 45 degrees
 x_se = rot_matrix_se*[(1:size(img_grid,2))-centroid(1);repmat(centroid(2),1,size(img_grid,1))-centroid(2)]; 
 % take line profile along the nw -> se diagonal
-line_prof_se = improfile(img_hull_grid,centroid(1)+2+[x_se(1,1) x_se(1,end)],centroid(2)+[x_se(2,1) x_se(2,end)]);
+line_prof_se = improfile(mask_grid,centroid(1)+2+[x_se(1,1) x_se(1,end)],centroid(2)+[x_se(2,1) x_se(2,end)]);
 
 rot_matrix_sw = [cosd(90) -sind(90); sind(90) cosd(90)]; % Create 90 degree rotation matrix
 x_sw = rot_matrix_sw*[x_se(1,:);x_se(2,:)]; % rotate nw->se by 90 degrees
 % take line profile along the sw -> ne diagonal
-line_prof_sw = improfile(img_hull_grid,centroid(1)-2+[x_sw(1,1) x_sw(1,end)],centroid(2)+[x_sw(2,1) x_sw(2,end)]);
+line_prof_sw = improfile(mask_grid,centroid(1)-2+[x_sw(1,1) x_sw(1,end)],centroid(2)+[x_sw(2,1) x_sw(2,end)]);
 
 grid_extent_se = find(line_prof_se); % find non-zeros
 grid_extent_sw = find(line_prof_sw); % find non-zeros

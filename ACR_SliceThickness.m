@@ -8,6 +8,10 @@
 function dz = ACR_SliceThickness(img_ACR,obj_ACR)
 close all
 
+% Find rotation of phantom and correct
+rot_angle = ACR_FindRotation(img_ACR,obj_ACR);
+img_ACR = ACR_RotateImages(img_ACR,rot_angle);
+
 if size(img_ACR,4) > 1 % check if input array contains multiple ACR series
     img_insert = squeeze(double(img_ACR(:,:,1,1))); % if yes, only process the first
     waitfor(msgbox('4D array detected. Only processing first axial series.'));
@@ -15,12 +19,7 @@ else
     img_insert = double(img_ACR(:,:,1));
 end
 
-if isempty(obj_ACR.getAttributeByName('PixelSpacing')) % Multi-frame check
-    list = obj_ACR.getAttributeByName('PerFrameFunctionalGroupsSequence');
-    res = list.Item_1.PixelMeasuresSequence.Item_1.PixelSpacing;
-else
-    res = obj_ACR.getAttributeByName('PixelSpacing'); % retrieve ACR in-plane resolution
-end
+res_ACR = ACR_RetrievePixelSpacing(obj_ACR);
 
 if isempty(obj_ACR.getAttributeByName('SliceThickness')) % Multi-frame check
     list = obj_ACR.getAttributeByName('PerFrameFunctionalGroupsSequence');
@@ -30,15 +29,12 @@ else
 end
 
 dims = [180; 8]; % dimensions of insert in cm
-dims_img = round(dims.*(1./res)); % dimensions of insert in pixels
+dims_img = round(dims.*(1./res_ACR)); % dimensions of insert in pixels
+
+
 
 % Find centroid
-bhull = bwmorph(bwconvhull(img_insert>0.3*max(img_insert(:))),'thin',1); % create convex hull image
-centroid = ACR_Centroid(img_ACR); % determine centroid
-
-% Find rotation of phantom
-% TO DO: LINE PROFILES TO FIND ASSYMMETRY?
-
+centroid = ACR_Centroid(img_ACR,obj_ACR); % determine centroid
 
 % initial line profile coordinates through ramp
 x = round([centroid(1) - floor(0.6*dims_img(1)/2), centroid(1) + floor(0.6*dims_img(1)/2),... 
@@ -105,7 +101,7 @@ for m = 1:5 % Try different offsets around centre of phantom
 
         % Calculate ramp length
         index(:,m,k) = [left_index(m,k) right_index(m,k)];
-        ramp_length(m,k) = (1/interp_factor)*(diff(index(:,m,k))).*res(1);
+        ramp_length(m,k) = (1/interp_factor)*(diff(index(:,m,k))).*res_ACR(1);
         ramp_prof(1:length(line_prof),m,k) = line_prof;
 
         temp = 0;
@@ -128,11 +124,11 @@ hold off
 title('Image')
 
 subplot(2,2,2)
-plot([1:length(ramp_prof(:,closestIndex,2))].*res(1),ramp_prof(:,closestIndex,2),'r')
+plot([1:length(ramp_prof(:,closestIndex,2))].*res_ACR(1),ramp_prof(:,closestIndex,2),'r')
 hold on
-plot(res(2).*[pk_index(closestIndex,2) pk_index(closestIndex,2)],[0 pk(closestIndex,2)],'--rx','MarkerIndices',2)
-plot(res(2).*index(:,closestIndex,2),0.5*[pk(closestIndex,2) pk(closestIndex,2)],'--r*')
-text(res(2).*pk_index(closestIndex,2), 0.6*pk(closestIndex,2),...
+plot(res_ACR(2).*[pk_index(closestIndex,2) pk_index(closestIndex,2)],[0 pk(closestIndex,2)],'--rx','MarkerIndices',2)
+plot(res_ACR(2).*index(:,closestIndex,2),0.5*[pk(closestIndex,2) pk(closestIndex,2)],'--r*')
+text(res_ACR(2).*pk_index(closestIndex,2), 0.6*pk(closestIndex,2),...
     sprintf('L = %.1fmm',ramp_length(closestIndex,2)),'color','k') % label with measured distance
 xlabel('Distance (mm)')
 ylabel('Intensity')
@@ -140,11 +136,11 @@ grid on
 title('Upper Ramp')
 
 subplot(2,2,4)
-plot([1:length(ramp_prof(:,closestIndex,1))].*res(1),ramp_prof(:,closestIndex,1),'b')
+plot([1:length(ramp_prof(:,closestIndex,1))].*res_ACR(1),ramp_prof(:,closestIndex,1),'b')
 hold on
-plot(res(1).*[pk_index(closestIndex,1) pk_index(closestIndex,1)],[0 pk(closestIndex,1)],'--bx','MarkerIndices',2)
-plot(res(1).*index(:,closestIndex,1),0.5*[pk(closestIndex,1) pk(closestIndex,1)],'--b*')
-text(res(1).*pk_index(closestIndex,1), 0.6*pk(closestIndex,1),...
+plot(res_ACR(1).*[pk_index(closestIndex,1) pk_index(closestIndex,1)],[0 pk(closestIndex,1)],'--bx','MarkerIndices',2)
+plot(res_ACR(1).*index(:,closestIndex,1),0.5*[pk(closestIndex,1) pk(closestIndex,1)],'--b*')
+text(res_ACR(1).*pk_index(closestIndex,1), 0.6*pk(closestIndex,1),...
     sprintf('L = %.1fmm',ramp_length(closestIndex,1)),'color','k') % label with measured distance
 xlabel('Distance (mm)')
 ylabel('Intensity')
