@@ -8,6 +8,12 @@ If anything is not clear please leave a message in [Discussions](https://github.
 
 Documentation will be added for scripts that are nominally finished.
 
+The required MATLAB toolboxes to run the suite of scripts are as follows:
+
+* **Image Processing Toolbox**
+* **Signal Processing Toolbox**
+* **Curve Fitting Toolbox (only for MTF)**
+
 ## _Uniformity_
 
 The centroid is first determined.
