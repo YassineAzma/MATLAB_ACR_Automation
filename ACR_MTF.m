@@ -15,6 +15,12 @@ else
     img_insert = double(img_ACR(:,:,1));
 end
 
+rot_ang = ACR_FindRotation(img_ACR,obj_ACR);
+
+if rot_ang == 0
+    waitfor(msgbox('The phantom has no detectable tilt so MTF results will not be accurate. Click OK to continue.'));
+end
+
 level = 0.5;
 res_ACR = ACR_RetrievePixelSpacing(obj_ACR);
 

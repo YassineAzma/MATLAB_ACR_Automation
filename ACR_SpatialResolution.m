@@ -18,8 +18,9 @@ res_ACR = ACR_RetrievePixelSpacing(obj_ACR);
 
 centroid = ACR_Centroid(img_ACR,obj_ACR); % find centroid
 
-mask = img_insert < 0.2*max(img_insert(:)); % threshold
+mask = img_insert.*ACR_Threshold(img_insert,res_ACR,centroid); % threshold
 cropped_mask = mask(round(centroid(2)):end,:); % crop image based on centroid
+cropped_mask = cropped_mask < 0.2*max(cropped_mask,[],'all');
 cropped_mask = bwareaopen(imfill(cropped_mask,'holes'),50); % fill holes and remove unconnected pixels
 cropped_mask = imclearborder(cropped_mask,18); % clear border
 

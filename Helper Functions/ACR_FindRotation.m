@@ -9,7 +9,7 @@ b_img = bwareaopen(edge(corr_img,'canny'),600*size(img,1)/600);
 P = houghpeaks(H,1);
 angle_peak = theta(P(1,2));
 
-if abs(angle_peak) > 0 && abs(abs(angle_peak) - 90) > 0
+if abs(angle_peak) > 45 && abs(abs(angle_peak) - 90) > 0
     if angle_peak < 0 
         rot_angle = 90 + angle_peak;
     else

@@ -20,62 +20,19 @@ else
 end
 
 res_ACR = ACR_RetrievePixelSpacing(obj_ACR);
-
-if isempty(obj_ACR.getAttributeByName('SliceThickness')) % Multi-frame check
-    list = obj_ACR.getAttributeByName('PerFrameFunctionalGroupsSequence');
-    dz_actual = list.Item_1.PixelMeasuresSequence.Item_1.SliceThickness;
-else
-    dz_actual = obj_ACR.getAttributeByName('SliceThickness'); % retrieve ACR prescribed slice thickness
-end
+dz_actual = ACR_RetrieveSliceThickness(obj_ACR);
 
 dims = [180; 8]; % dimensions of insert in cm
 dims_img = round(dims.*(1./res_ACR)); % dimensions of insert in pixels
-
-
 
 % Find centroid
 centroid = ACR_Centroid(img_ACR,obj_ACR); % determine centroid
 
 % initial line profile coordinates through ramp
-x = round([centroid(1) - floor(0.6*dims_img(1)/2), centroid(1) + floor(0.6*dims_img(1)/2),... 
-    centroid(1) - floor(0.6*dims_img(1)/2), centroid(1) + floor(0.6*dims_img(1)/2)]); % x points
-y = round([centroid(2) + floor(dims_img(2)*0.35), centroid(2) + floor(dims_img(2)*0.35),... 
-    centroid(2) - floor(dims_img(2)*0.35), centroid(2) - floor(dims_img(2)*0.35)]); % y points
+[x,y] = ACR_RampFind(img_insert,centroid,res_ACR);
 
-imshow(img_insert,[0 0.5*max(img_insert(:))],'InitialMagnification',400)
-hold on
-plot([x(1),x(2)],[y(1),y(2)],'b')
-plot([x(3),x(4)],[y(3),y(4)],'r')
-hold off
-
-answer = questdlg('Is the current AP position of the line profiles suitable?',...
-    'Line Profile Position Confirmation',...
-    'Yes','No','No');
-
-while strcmp(answer,'No')
-    switch answer
-        case 'No'
-            msgbox('Zoom to the ramps and press any key.','modal');
-            zoom on
-            pause()
-            zoom off
-            msgbox('Using the crosshair, select the correct AP position of the line profiles.','modal');
-            [~,y] = ginput(2);
-
-            y = [y(1) y(1) y(2) y(2)];
-            imshow(img_insert,[0 0.5*max(img_insert(:))],'InitialMagnification',400)
-            hold on
-            plot([x(1),x(2)],[y(1) y(2)],'b')
-            plot([x(3),x(4)],[y(3) y(4)],'r')
-
-            answer = questdlg('Is the current AP position of the line profiles suitable?',...
-                'Line Profile Position Confirmation',...
-                'Yes','No','No');
-        case 'Yes'
-            break
-    end
-end
-
+x = repmat(x,1,2);
+y = repelem(y,2);
 interp_factor = 5; % interpolation factor for subpixel measurement
 ramp_prof = zeros(max(diff(x))*interp_factor,7,2);
 temp = 0;

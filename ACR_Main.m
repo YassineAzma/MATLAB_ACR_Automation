@@ -65,7 +65,6 @@ SNR = ACR_SNR(img_ACR,obj_ACR)
 if size(img_ACR,4) > 1
     sub_SNR = ACR_subSNR(img_ACR,obj_ACR)
 end
-
 %% MTF (Experimental) ONLY USE ON SLANTED EDGE
 
 eff_res = ACR_MTF(img_ACR,obj_ACR)

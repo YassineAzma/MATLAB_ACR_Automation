@@ -10,19 +10,7 @@ else
     img_spokes = double(img_ACR(:,:,9:11));
 end
 
-if isempty(obj_ACR.getAttributeByName('PixelSpacing')) % Multi-frame check
-    list = obj_ACR.getAttributeByName('PerFrameFunctionalGroupsSequence');
-    res_ACR = list.Item_1.PixelMeasuresSequence.Item_1.PixelSpacing; % retrieve ACR in-plane resolution
-else
-    res_ACR = obj_ACR.getAttributeByName('PixelSpacing'); % retrieve ACR in-plane resolution
-end
-
-if isempty(obj_ACR.getAttributeByName('PixelSpacing')) % Multi-frame check
-    list = obj_ACR.getAttributeByName('PerFrameFunctionalGroupsSequence');
-    res_ACR = list.Item_1.PixelMeasuresSequence.Item_1.PixelSpacing;
-else
-    res_ACR = obj_ACR.getAttributeByName('PixelSpacing'); % retrieve ACR in-plane resolution
-end
+res_ACR = ACR_RetrievePixelSpacing(obj_ACR);
 
 centroid_mask = img_spokes(:,:,1) > 0.15*max(img_spokes(:)); % convex hull image
 centroid = regionprops(centroid_mask,'Centroid'); % find centroid

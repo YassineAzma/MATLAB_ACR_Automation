@@ -19,9 +19,12 @@ end
 mean_x_profile = mean(t,2);
 abs_diff_x_profile = abs(diff(mean_x_profile));
 [~,x_locs] = findpeaks(abs_diff_x_profile,'NPeaks',2,'SortStr','descend');
-x_locs = 1 + w_point + x_locs;
+x_locs = w_point + x_locs-1;
 
-x = min(x_locs)+round([2/res_ACR(1) 7/res_ACR(1)]);
+width_pts = [x_locs(1) x_locs(2)];
+width = max(width_pts)-min(width_pts);
+
+x = round([min(width_pts)+0.33*width, max(width_pts)-0.33*width]);
 %% Y LOCATION
 investigate_region = ceil(20/res_ACR(2)); % Width to investigate
 
@@ -41,7 +44,7 @@ abs_diff_y_profile = abs(diff(mean_y_profile));
 
 [~,y_locs] = findpeaks(abs_diff_y_profile,'NPeaks',2,'SortStr','descend');
 
-y_locs = n_point + y_locs;
+y_locs = n_point + y_locs-1;
 
 if y_locs(2)-y_locs(1) < 5/res_ACR(2)
     y = n_point + round(10/res_ACR(2));
@@ -53,7 +56,7 @@ end
 dist_to_y = abs(n_point - y(1))*res_ACR(2); % in mm
 y(2) = round(y(1)+(47 - dist_to_y)/res_ACR(2));
 
-% imshow(img,[])
-% hold on
-% plot([x(1),x(1)],[y(1),y(2)],'-b')
-% plot([x(2),x(2)],[y(1),y(2)],'-r')
+imshow(img,[])
+hold on
+plot([x(1),x(1)],[y(1),y(2)],'-b')
+plot([x(2),x(2)],[y(1),y(2)],'-r')
