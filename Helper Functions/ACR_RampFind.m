@@ -20,7 +20,7 @@ xlocs = sort(xlocs)-1;
 width_pts = [xlocs(2) xlocs(3)];
 width = max(width_pts)-min(width_pts);
 
-x = round([min(width_pts)+0.15*width, max(width_pts)-0.15*width]);
+x = round([min(width_pts)+0.2*width, max(width_pts)-0.2*width]);
 
 %% Y LOCATION
 
@@ -32,7 +32,7 @@ abs_diff_y_profile = abs(diff(c));
 height_pts = centroid(2)-2*investigate_region-1+ylocs;
 height = max(height_pts)-min(height_pts);
 
-y = round([min(height_pts)+0.25*height, max(height_pts)-0.25*height]);
+y = round([max(height_pts)-0.3*height min(height_pts)+0.3*height]);
 
 % imshow(img,[])
 % hold on

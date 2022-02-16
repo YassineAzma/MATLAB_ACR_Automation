@@ -24,7 +24,7 @@ x_locs = w_point + x_locs-1;
 width_pts = [x_locs(1) x_locs(2)];
 width = max(width_pts)-min(width_pts);
 
-x = round([min(width_pts)+0.33*width, max(width_pts)-0.33*width]);
+x = round([min(width_pts)+0.25*width, max(width_pts)-0.25*width]);
 %% Y LOCATION
 investigate_region = ceil(20/res_ACR(2)); % Width to investigate
 
