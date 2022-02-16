@@ -40,4 +40,4 @@ for k = 1:size(coord_perms,1)
     c(k,:) = D\T;
 end
 
-centroid_arc = mean(c);
+centroid_arc = round(mean(c));
