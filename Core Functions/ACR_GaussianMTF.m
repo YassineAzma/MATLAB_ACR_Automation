@@ -28,10 +28,10 @@ min_y = min(row);
 max_x = max(col);
 max_y = max(row);
 
-roi_crop = imcrop(img_insert,[min_x min_y max_x-min_x max_y-min_y]);
-if size(roi_crop,2) > size(roi_crop,1) % Find edge axis
+roi_crop = imcrop(img_insert,[min_x min_y max_x-min_x max_y-min_y]); % crop image
+if size(roi_crop,2) > size(roi_crop,1) % Find edge axis based on which ROI dimension is longer
     roi_crop = roi_crop';
-    trans = 1;
+    trans = 1; % 
 end
 
 [X,Y] = meshgrid(1:size(roi_crop,2),1:size(roi_crop,1));
@@ -46,7 +46,6 @@ obj_fun = @(a) sum((roi_crop - fun(a,X,Y)).^2,'all');
 
 %% Resampling Along Edge
 edge_slope = -1/par(2);
-mid_loc = [ceil(size(resample_roi_crop,1)/2) ceil(size(resample_roi_crop,2)/2)];
 
 if trans == 1
     resample_roi_crop = imresize(roi_crop,[size(roi_crop,1),8*size(roi_crop,2)]);
@@ -54,22 +53,26 @@ else
     resample_roi_crop = imresize(roi_crop,[8*size(roi_crop,1),size(roi_crop,2)]);
 end
 
+mid_loc = [ceil(size(resample_roi_crop,1)/2) ceil(size(resample_roi_crop,2)/2)];
 [X_resample,Y_resample] = meshgrid(1:size(resample_roi_crop,2),1:size(resample_roi_crop,1));
 
-diffY = Y_resample-1;
-X_prime = X_resample - edge_slope*diffY;
-imshow(X_prime,[])
+diffY = flipud(Y_resample-1);
+X_prime = X_resample + diffY*edge_slope;
 
-for k = 1:size(resample_roi_crop,2)
-    erf(k) = mean(resample_roi_crop(find((X_prime > k-1) .* (X_prime <= k))));
+x_range = [floor(min(X_prime,[],'all')), ceil(max(X_prime,[],'all'))];
+
+erf = [];
+for k = x_range(1):x_range(2)
+    index = k+abs(x_range(1))+1;
+    if k < x_range(2)
+        erf(index) = mean(resample_roi_crop((X_prime > k) .* (X_prime <= k+1)==1));
+    end
 end
 
-% erf = mean(reshape(erf,2,[]));
 %% LSF
-hamming_filt = hamming(1,length(erf)-1); % hamming filter
-lsf = diff(erf)/(res_ACR(2)/8); % calculate LSF
+hamming_filt = hamming(length(erf)-1)'; % hamming filter
+lsf = diff(erf); % calculate LSF
 lsf = hamming_filt.*lsf;
-lsf = lsf./sum(lsf); % normalize
 
 %% MTF
 N = size(lsf,2); % length of LSF
@@ -84,10 +87,27 @@ Fs = 1/(rms(res_ACR)*(1/8)); % sampling spatial frequency (lp/mm)
 T = N/Fs; % 
 freq = n/T; % convert spatial period to frequency  
 MTF = abs(fftshift(fft(lsf))); % perform FFT for MTF
+MTF = MTF./max(MTF);
 zero_freq = find(freq==0); % find zero frequency
 
 figure
-subplot(1,2,1)
+subplot(2,2,1)
+plot(erf,'b.')
+% Label axes
+xlabel( 'Pixel', 'Interpreter', 'none' );
+ylabel( 'Intensity', 'Interpreter', 'none' );
+grid on
+title('Edge Response Function');
+
+subplot(2,2,2)
+plot(lsf,'b.')
+% Label axes
+xlabel( 'Pixel', 'Interpreter', 'none' );
+ylabel( 'Intensity', 'Interpreter', 'none' );
+grid on
+title('Line Spread Function');
+
+subplot(2,2,3)
 plot(freq,MTF,'b.')
 % Label axes
 ylim([0 1])
@@ -105,7 +125,7 @@ eq_lp = freq_interp(0:0.005:1==level); % Closest spatial frequency to a MTF of 0
 
 eff_res = (1/(eq_lp*2)); % output effective resolution for the line profile
 
-subplot(1,2,2)
+subplot(2,2,4)
 plot(freq_corr,MTF_corr,'b.')
 % Label axes
 xlim([0 5])
