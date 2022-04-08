@@ -1,4 +1,4 @@
-function ACR_Report(L,resolvable,dz,dL,PIU,PSG,SNR,obj_ACR,obj_loc,options)
+function ACR_Report(L,resolvable,dz,dL,PIU,PSG,SNR,eff_res,obj_ACR,obj_loc,options)
 
 % FOLDER FIELDS
 Location = obj_ACR.getAttributeByName('InstitutionName');
@@ -106,11 +106,13 @@ if strcmpi(options.RicianNoiseCorrection,'yes')
 else
     SignaltoNoise = round(SNR,2);
 end
+MTF50 = round(eff_res,2);
 
 Header = {'Date','Coil','Series Name','Geometric Accuracy (mm)','Coefficient of Variation (%)','Spatial Resolution'...
-    ,'Slice Thickness (mm)','Slice Position (mm)','Integral Uniformity (%)','Percent Signal Ghosting (%)','SNR'};
+    ,'Slice Thickness (mm)','Slice Position (mm)','Integral Uniformity (%)','Percent Signal Ghosting (%)','SNR',...
+    'Effective Resolution (mm)'};
 ACR_Fields = {[DateTime_ACR,Coil_ACR,SeriesNameACR,GeometricAccuracyACR,GeometricAccuracyCoV,SpatialResolution,SliceThickness ... 
-    SlicePosition,Uniformity,Ghosting,SignaltoNoise]};
+    SlicePosition,Uniformity,Ghosting,SignaltoNoise,MTF50]};
 
 % EXISTING FIELDS HANDLING
 if isfile([TargetFolder '\'  Scanner '.xls'])

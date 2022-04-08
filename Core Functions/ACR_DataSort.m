@@ -114,26 +114,26 @@ for m = 1:answer
             end
         end
     else
-        [img_ACR,obj_ACR,z] = ACR_OpenDICOM(Files);
+        [img_ACR(:,:,:,m),obj_ACR(m),z] = ACR_OpenDICOM(Files);
         
         [~,ind] = sort(z); % Sort slice locations into sequential order
 
         img_ACR(:,:,:,m) = img_ACR(:,:,ind,m); % Reorder based on ascending slice location
 
-        check = ACR_SliceInversionCheck(img_ACR,obj_ACR);
+        check = ACR_SliceInversionCheck(img_ACR(:,:,:,m),obj_ACR(m));
         if check == 1
-            img_ACR = flipdim(img_ACR,3);
+            img_ACR(:,:,:,m) = flipdim(img_ACR(:,:,:,m),3);
         end
         try
             switch obj_ACR.getAttributeByName('0051,100E')
                 case 'Sag'
-                    img_ACR = imrotate(img_ACR,-90,'bilinear','crop');
+                    img_ACR(:,:,:,m) = imrotate(img_ACR(:,:,:,m),-90,'bilinear','crop');
             end
         catch
-            orientation = round(obj_ACR.getAttributeByName('ImageOrientationPatient'),3);
+            orientation = round(obj_ACR(m).getAttributeByName('ImageOrientationPatient'),3);
 
             if orientation == [0 1 0 0 0 -1]' % SAGITTAL
-                img_ACR = imrotate(img_ACR,-90,'bilinear','crop');
+                img_ACR(:,:,:,m) = imrotate(img_ACR(:,:,:,m),-90,'bilinear','crop');
             end
         end
     end

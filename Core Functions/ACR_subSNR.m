@@ -7,7 +7,7 @@
 % Magnetic Resonance Imaging'. The results are visualised.
 
 function SNR = ACR_subSNR(img_ACR,obj_ACR)
-close all
+
 img_SNR = squeeze(double(img_ACR(:,:,7,:)));
 
 res_ACR = ACR_RetrievePixelSpacing(obj_ACR);
@@ -48,20 +48,22 @@ noise_std = (1/sqrt(2))*std(nonzeros(img_SNR_sub(roi_index))); % std of noise RO
 
 SNR = sig_mean/noise_std;
 
-% figure
-subplot(1,2,1)
-imshow(img_SNR(:,:,1),[])
-hold on
-plot(r_img*cosd(0:1:360)+centroid(1),r_img*sind(0:1:360)+centroid(2)+5)
-text(centroid(1)-3*floor(10./res_ACR(1)), centroid(2)+floor(10./res_ACR(1)),...
-    sprintf('mean = %.1f',sig_mean),'color','w','fontsize',8) % label with averaged mean
+if strcmp(options.SuppressFigures,'no')
+    figure
+    subplot(1,2,1)
+    imshow(img_SNR(:,:,1),[])
+    hold on
+    plot(r_img*cosd(0:1:360)+centroid(1),r_img*sind(0:1:360)+centroid(2)+5)
+    text(centroid(1)-3*floor(10./res_ACR(1)), centroid(2)+floor(10./res_ACR(1)),...
+        sprintf('mean = %.1f',sig_mean),'color','w','fontsize',8) % label with averaged mean
 
-subplot(1,2,2)
-imshow(img_SNR_sub,[])
-hold on
-plot(r_img*cosd(0:1:360)+centroid(1),r_img*sind(0:1:360)+centroid(2)+5)
-text(centroid(1)-3*floor(10./res_ACR(1)), centroid(2)+floor(10./res_ACR(1)),...
-    sprintf('std = %.1f',noise_std),'color','w','fontsize',8) % label with measured std
+    subplot(1,2,2)
+    imshow(img_SNR_sub,[])
+    hold on
+    plot(r_img*cosd(0:1:360)+centroid(1),r_img*sind(0:1:360)+centroid(2)+5)
+    text(centroid(1)-3*floor(10./res_ACR(1)), centroid(2)+floor(10./res_ACR(1)),...
+        sprintf('std = %.1f',noise_std),'color','w','fontsize',8) % label with measured std
 
-% xlabel(['SNR = ' num2str(round(SNR,1))],'fontweight','bold','fontsize',14)
-% title('Signal to Noise Ratio')
+    % xlabel(['SNR = ' num2str(round(SNR,1))],'fontweight','bold','fontsize',14)
+    % title('Signal to Noise Ratio')
+end

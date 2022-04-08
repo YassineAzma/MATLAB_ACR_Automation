@@ -12,7 +12,10 @@ function mask = ACR_Threshold(img,res,centroid)
 
 for n = 1:size(img,3)
     temp = img(:,:,n);
-    edge_img = bwareaopen(edge(temp,'Canny'),1500*size(img,1)/600); 
+    edge_img = bwareaopen(edge(temp,'Canny'),round(1500*size(img,1)/600)); 
+    if nnz(edge_img) == 0
+        edge_img = bwareaopen(edge(temp,'Canny'),round(600*size(img,1)/600)); 
+    end
     label_map = bwlabel(edge_img);
     if max(label_map,[],'all') > 1
         for k = 1:max(label_map,[],'all')

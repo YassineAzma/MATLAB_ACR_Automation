@@ -56,7 +56,7 @@ end
 dist_to_y = abs(n_point - y(1))*res_ACR(2); % in mm
 y(2) = round(y(1)+(47 - dist_to_y)/res_ACR(2));
 
-imshow(img,[])
-hold on
-plot([x(1),x(1)],[y(1),y(2)],'-b')
-plot([x(2),x(2)],[y(1),y(2)],'-r')
+% imshow(img,[])
+% hold on
+% plot([x(1),x(1)],[y(1),y(2)],'-b')
+% plot([x(2),x(2)],[y(1),y(2)],'-r')
