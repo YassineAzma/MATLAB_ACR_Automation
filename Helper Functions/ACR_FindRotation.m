@@ -2,7 +2,7 @@ function rot_angle = ACR_FindRotation(img_ACR,obj_ACR)
 
 img = img_ACR(:,:,1);
 corr_img = ACR_IntensityGradientCorrection(img,obj_ACR);
-b_img = bwareaopen(edge(corr_img,'canny'),600*size(img,1)/600);
+b_img = bwareaopen(edge(corr_img,'canny'),round(300*size(img,1)/600));
 
 [H,theta,~] = hough(b_img,'Theta',-90:0.5:89.5);
 
